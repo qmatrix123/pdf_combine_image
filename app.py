@@ -1,20 +1,22 @@
 import streamlit as st
-import fitz  # PyMuPDF
+import pymupdf  # 确保使用 PyMuPDF 而不是 fitz
 from io import BytesIO
 import base64
 
-def insert_image_in_pdf(pdf_path, image_path, page_number, position):
+def insert_image_in_pdf(pdf_bytes, image_bytes, page_number, position):
     # 打开PDF文件
-    doc = fitz.open(pdf_path)
+    pdf_file = BytesIO(pdf_bytes)
+    doc = pymupdf.open(stream=pdf_file, filetype="pdf")
     
     # 选择页面
     page = doc.load_page(page_number)  # 注意：页码从0开始
     
     # 获取图片矩形框
-    img_rect = fitz.Rect(position[0], position[1], position[0] + position[2], position[1] + position[3])
+    img_rect = pymupdf.Rect(position[0], position[1], position[0] + position[2], position[1] + position[3])
     
     # 插入图片
-    page.insert_image(img_rect, filename=image_path)
+    img_file = BytesIO(image_bytes)
+    page.insert_image(img_rect, stream=img_file)
     
     # 保存到字节流
     output_pdf = BytesIO()
@@ -53,18 +55,13 @@ if generate_button:
     if pdf_file and image_file:
         # 提取原始PDF文件名
         original_filename = pdf_file.name
-        pdf_path = pdf_file.name
-        image_path = image_file.name
         
-        # 将文件保存到本地
-        with open(pdf_path, "wb") as f:
-            f.write(pdf_file.getbuffer())
-        
-        with open(image_path, "wb") as f:
-            f.write(image_file.getbuffer())
+        # 读取文件内容
+        pdf_bytes = pdf_file.read()
+        image_bytes = image_file.read()
         
         # 调用函数生成PDF
-        output_pdf = insert_image_in_pdf(pdf_path, image_path, page_number, (x, y, width, height))
+        output_pdf = insert_image_in_pdf(pdf_bytes, image_bytes, page_number, (x, y, width, height))
         
         # 将BytesIO对象转换为字节
         pdf_bytes = output_pdf.getvalue()

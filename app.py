@@ -55,6 +55,10 @@ if generate_button:
         
         pdf_bytes = output_pdf.getvalue()
         
+        # 清理上传的文件
+        del pdf_file
+        del image_file
+        
         with col2:
             st.header("PDF预览与下载")
             
@@ -130,6 +134,10 @@ if generate_button:
             '''
             
             components.html(pdf_display, height=800)
+            
+            # 清理生成的 PDF 文件
+            del pdf_bytes
+            del output_pdf
     else:
         st.error("请上传PDF文件和图片文件")
 

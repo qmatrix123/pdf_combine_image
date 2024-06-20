@@ -36,7 +36,7 @@ with col1:
     image_file = st.file_uploader("选择一个图片文件", type=["png", "jpg", "jpeg"], key="img")
 
     page_number = st.number_input("插入图片的页面编号（从0开始）", min_value=0, value=0, step=1)
-    x = st.number_input("图片的X坐标", min_value=0, value=300, step=10)
+    x = st.number_input("图片的X坐标", min_value=0, value=350, step=10)
     y = st.number_input("图片的Y坐标", min_value=0, value=550, step=10)
     width = st.number_input("图片的宽度", min_value=1, value=150, step=10)
     height = st.number_input("图片的高度", min_value=1, value=150, step=10)

@@ -78,7 +78,6 @@ if generate_button:
                 <head>
                     <title>PDF Preview</title>
                     <style>
-                        @import url('https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css');
                         body {{
                             margin: 0;
                             display: flex;

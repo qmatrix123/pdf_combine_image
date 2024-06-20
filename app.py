@@ -61,7 +61,73 @@ if generate_button:
             st.download_button("下载PDF", data=pdf_bytes, file_name=original_filename, mime="application/pdf")
             
             pdf_base64 = base64.b64encode(pdf_bytes).decode('utf-8')
-            pdf_display = f'<iframe src="data:application/pdf;base64,{pdf_base64}" width="100%" height="800px" type="application/pdf"></iframe>'
+            
+            pdf_display = f'''
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>PDF Preview</title>
+                    <style>
+                        body {{
+                            margin: 0;
+                            display: flex;
+                            justify-content: center;
+                            align-items: center;
+                            height: 100vh;
+                            overflow: hidden;
+                        }}
+                        #pdf-viewer {{
+                            width: 100%;
+                            height: 100%;
+                            overflow: auto;
+                        }}
+                        canvas {{
+                            display: block;
+                            margin: auto;
+                        }}
+                    </style>
+                    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.9.359/pdf.min.js"></script>
+                </head>
+                <body>
+                    <div id="pdf-viewer"></div>
+                    <script>
+                        var pdfData = atob("{pdf_base64}");
+                        var pdfjsLib = window['pdfjs-dist/build/pdf'];
+                        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.9.359/pdf.worker.min.js';
+                        
+                        var loadingTask = pdfjsLib.getDocument({{data: pdfData}});
+                        loadingTask.promise.then(function(pdf) {{
+                            console.log('PDF loaded');
+                            
+                            for (var pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {{
+                                pdf.getPage(pageNumber).then(function(page) {{
+                                    console.log('Page loaded');
+                                    
+                                    var scale = 1.5;
+                                    var viewport = page.getViewport({{scale: scale}});
+                                    
+                                    var canvas = document.createElement('canvas');
+                                    var context = canvas.getContext('2d');
+                                    canvas.height = viewport.height;
+                                    canvas.width = viewport.width;
+                                    
+                                    var renderContext = {{
+                                        canvasContext: context,
+                                        viewport: viewport
+                                    }};
+                                    page.render(renderContext).promise.then(function () {{
+                                        console.log('Page rendered');
+                                        document.getElementById('pdf-viewer').appendChild(canvas);
+                                    }});
+                                }});
+                            }}
+                        }}, function (reason) {{
+                            console.error(reason);
+                        }});
+                    </script>
+                </body>
+                </html>
+            '''
             
             components.html(pdf_display, height=800)
     else:

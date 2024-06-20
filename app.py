@@ -2,25 +2,24 @@ import streamlit as st
 import fitz  # PyMuPDF
 from io import BytesIO
 import base64
+import os
+import tempfile
 import streamlit.components.v1 as components
 
-def insert_image_in_pdf(pdf_bytes, image_bytes, page_number, position):
-    pdf_file = BytesIO(pdf_bytes)
-    doc = fitz.open(stream=pdf_file, filetype="pdf")
+def insert_image_in_pdf(pdf_path, image_path, page_number, position):
+    doc = fitz.open(pdf_path)
     
     page = doc.load_page(page_number)  # 页码从0开始
     
     img_rect = fitz.Rect(position[0], position[1], position[0] + position[2], position[1] + position[3])
     
-    img_file = BytesIO(image_bytes)
-    page.insert_image(img_rect, stream=img_file)
+    page.insert_image(img_rect, filename=image_path)
     
-    output_pdf = BytesIO()
-    doc.save(output_pdf)
+    output_pdf_path = os.path.join(tempfile.gettempdir(), "output.pdf")
+    doc.save(output_pdf_path)
     doc.close()
-    output_pdf.seek(0)
     
-    return output_pdf
+    return output_pdf_path
 
 # 设置页面布局为全屏
 st.set_page_config(layout="wide")
@@ -48,16 +47,23 @@ if generate_button:
     if pdf_file and image_file:
         original_filename = pdf_file.name
         
-        pdf_bytes = pdf_file.read()
-        image_bytes = image_file.read()
+        pdf_path = os.path.join(tempfile.gettempdir(), "input.pdf")
+        image_path = os.path.join(tempfile.gettempdir(), "image.png")
         
-        output_pdf = insert_image_in_pdf(pdf_bytes, image_bytes, page_number, (x, y, width, height))
+        with open(pdf_path, "wb") as f:
+            f.write(pdf_file.read())
         
-        pdf_bytes = output_pdf.getvalue()
+        with open(image_path, "wb") as f:
+            f.write(image_file.read())
+        
+        output_pdf_path = insert_image_in_pdf(pdf_path, image_path, page_number, (x, y, width, height))
+        
+        with open(output_pdf_path, "rb") as f:
+            pdf_bytes = f.read()
         
         # 清理上传的文件
-        del pdf_file
-        del image_file
+        os.remove(pdf_path)
+        os.remove(image_path)
         
         with col2:
             st.header("PDF预览与下载")
@@ -136,8 +142,7 @@ if generate_button:
             components.html(pdf_display, height=800)
             
             # 清理生成的 PDF 文件
-            del pdf_bytes
-            del output_pdf
+            os.remove(output_pdf_path)
     else:
         st.error("请上传PDF文件和图片文件")
 

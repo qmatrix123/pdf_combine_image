@@ -137,8 +137,8 @@ if generate_button:
                             
                             var viewer = document.getElementById('pdf-viewer');
                             var loading = document.getElementById('loading');
-                            loading.style.display = 'block';
-                            viewer.style.display = 'none';
+                            loading.style.display = 'none';
+                            viewer.style.display = 'block';
                             
                             for (var pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {{
                                 pdf.getPage(pageNumber).then(function(page) {{

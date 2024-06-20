@@ -78,6 +78,7 @@ if generate_button:
                 <head>
                     <title>PDF Preview</title>
                     <style>
+                        @import url('https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css');
                         body {{
                             margin: 0;
                             display: flex;
@@ -85,21 +86,46 @@ if generate_button:
                             align-items: center;
                             height: 100vh;
                             overflow: hidden;
+                            background-color: #f0f4f8;
                         }}
                         #pdf-viewer {{
                             width: 100%;
                             height: 100%;
                             overflow: auto;
                         }}
-                        canvas {{
-                            display: block;
-                            margin: auto;
+                        #loading {{
+                            display: flex;
+                            justify-content: center;
+                            align-items: center;
+                            width: 100%;
+                            height: 100%;
+                            font-size: 20px;
+                            color: #333;
+                            position: absolute;
+                            top: 0;
+                            left: 0;
+                        }}
+                        .spinner {{
+                            border: 8px solid rgba(0, 0, 0, 0.1);
+                            width: 64px;
+                            height: 64px;
+                            border-radius: 50%;
+                            border-left-color: #09f;
+                            animation: spin 1s ease infinite;
+                        }}
+                        @keyframes spin {{
+                            0% {{ transform: rotate(0deg); }}
+                            100% {{ transform: rotate(360deg); }}
                         }}
                     </style>
                     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.9.359/pdf.min.js"></script>
                 </head>
                 <body>
-                    <div id="pdf-viewer"></div>
+                    <div id="loading">
+                        <div class="spinner"></div>
+                        <span class="ml-4">Loading...</span>
+                    </div>
+                    <div id="pdf-viewer" style="display: none;"></div>
                     <script>
                         var pdfData = atob("{pdf_base64}");
                         var pdfjsLib = window['pdfjs-dist/build/pdf'];
@@ -108,6 +134,11 @@ if generate_button:
                         var loadingTask = pdfjsLib.getDocument({{data: pdfData}});
                         loadingTask.promise.then(function(pdf) {{
                             console.log('PDF loaded');
+                            
+                            var viewer = document.getElementById('pdf-viewer');
+                            var loading = document.getElementById('loading');
+                            loading.style.display = 'block';
+                            viewer.style.display = 'none';
                             
                             for (var pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {{
                                 pdf.getPage(pageNumber).then(function(page) {{
@@ -127,7 +158,7 @@ if generate_button:
                                     }};
                                     page.render(renderContext).promise.then(function () {{
                                         console.log('Page rendered');
-                                        document.getElementById('pdf-viewer').appendChild(canvas);
+                                        viewer.appendChild(canvas);
                                     }});
                                 }});
                             }}
